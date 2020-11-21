@@ -9,6 +9,7 @@ import (
 	"github.com/qri-io/qfs"
 	"github.com/qri-io/qri/base/component"
 	"github.com/qri-io/qri/base/dsfs"
+	"github.com/qri-io/qri/changes"
 	"github.com/qri-io/qri/dsref"
 	qerr "github.com/qri-io/qri/errors"
 )
@@ -339,4 +340,38 @@ func isFilePath(text string) bool {
 		return false
 	}
 	return !dsref.IsRefString(text)
+}
+
+type ChangeReportParams struct {
+	LeftRefstr  string
+	RightRefstr string
+}
+
+type ChangeReport = changes.ChangeReport
+
+func (m *DatasetMethods) ChangeReport(p *ChangeReportParams, res *changes.ChangeReport) error {
+	ctx := context.TODO()
+	reportSource := "local"
+
+	right, _, err := m.inst.ParseAndResolveRef(ctx, p.RightRefstr, reportSource)
+	if err != nil {
+		return err
+	}
+
+	var left dsref.Ref
+	if p.LeftRefstr != "" {
+		if left, _, err = m.inst.ParseAndResolveRef(ctx, p.LeftRefstr, reportSource); err != nil {
+			return err
+		}
+	} else {
+		left = dsref.Ref{Username: right.Username, Name: right.Name}
+	}
+
+	report, err := changes.NewService(m.inst).Report(ctx, left, right, reportSource)
+	if err != nil {
+		return err
+	}
+
+	*res = report
+	return nil
 }

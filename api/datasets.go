@@ -97,6 +97,18 @@ func (h *DatasetHandlers) DiffHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *DatasetHandlers) ChangeReportHandler(w http.ResponseWriter, r *http.Request) {
+	rightRefStr := HTTPPathToQriPath(r.URL.Path)
+	p := &lib.ChangeReportParams{
+		RightRefstr: rightRefStr,
+	}
+	res := &lib.ChangeReport{}
+	if err := h.ChangeReport(p, res); err != nil {
+		util.WriteErrResponse(w, http.StatusBadRequest, err)
+	}
+	util.WriteResponse(w, res)
+}
+
 // PeerListHandler is a dataset list endpoint
 func (h *DatasetHandlers) PeerListHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
